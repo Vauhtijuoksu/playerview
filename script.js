@@ -80,6 +80,9 @@ function update_time(){
         } else {
             time_now = (timer_end - timer_start) / 1000
         }
+        if (time_now < 0){
+            time_now = 0
+        }
         let remain = time_now
         let hours = Math.floor(remain / (60 * 60))
         remain -= hours * 60 * 60
@@ -191,7 +194,6 @@ function setFade() {
     let msg = donations_flag.message
     let time = new Date(msg.split(" ")[0])
     var diff = (Date.now() - time)/1000
-    console.log(diff)
     if (diff < fade_minutes*60) {
         element.style.backgroundColor = "#ffe600";
         element.style.opacity = (1-diff/(fade_minutes*60)).toString();
