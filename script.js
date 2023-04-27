@@ -14,7 +14,8 @@ docReady(function() {
     make_timer()
     updateStatus()
     document.getElementById("time").onclick = toggle_time;
-    document.getElementById("deaths").onclick = toggle_death;
+    document.getElementById("selfcount").onclick = toggle_selfcount;
+    document.getElementById("COUNT").onclick = toggle_count;
     document.getElementById("HR").onclick = toggle_hr;
     getDonationsFlag()
     setFade()
@@ -24,8 +25,11 @@ docReady(function() {
 function toggle_time(){
     document.getElementById("time").classList.toggle("hidden")
 }
-function toggle_death(){
-    document.getElementById("deaths").classList.toggle("hidden")
+function toggle_count(){
+    document.getElementById("COUNT").classList.toggle("hidden")
+}
+function toggle_selfcount() {
+    document.getElementById("selfcount").classList.toggle("hidden")
 }
 function toggle_hr(){
     document.getElementById("HR").classList.toggle("hidden")
@@ -43,7 +47,33 @@ function updateStatus() {
     }
     xhr.send();
 }
+let selfcount = 0
 
+document.addEventListener("keyup", KeyCheck);  //or however you are calling your method
+function KeyCheck(event) {
+    var KeyID = event.keyCode;
+    switch (KeyID) {
+        case 32:
+            selfcount += 1
+            updateselfcount()
+            break;
+        case 8:
+            selfcount -= 1
+            updateselfcount()
+            break;
+        case 46:
+            selfcount = 0
+            updateselfcount()
+            break;
+        default:
+            break;
+    }
+}
+
+function updateselfcount() {
+    var element = document.getElementById("selfcountvalue");
+    element.innerHTML = selfcount
+}
 
 let timer_start = null   // Date.now()
 let timer_end = null
@@ -117,67 +147,85 @@ function update_time(){
 
 function updateInfo(info) {
    // console.log(info)
+    let runtimer = false
     if (info.timers.length > 0){
-        runtimer = info.timers[0] // Only 1 timer currently pls.
-        if (runtimer.start_time != null){
-            timer_start = new Date(runtimer.start_time)
-        } else {
-            timer_start = null
-        }
-        if (runtimer.end_time != null){
-            timer_end = new Date(runtimer.end_time);
-        } else {
-            timer_end = null
-        }
 
-    }
-    updateDeath(1, info.counters[0]);
-    updateDeath(2, info.counters[1]);
-    updateDeath(3, info.counters[2]);
-    updateDeath(4, info.counters[3]);
-    updateHR(1, info.heart_rates[0]);
-    updateHR(2, info.heart_rates[1]);
-    updateHR(3, info.heart_rates[2]);
-    updateHR(4, info.heart_rates[3]);
-    updateHR(5, info.heart_rates[4]);
-}
-
-function updateDeath(player, data) {
-    var element = document.getElementById(("deathcounter" + player).toString());
-    if (element) {
-        for (var i = 0; i < element.childNodes.length; i++) {
-            if (element.childNodes[i].className == "counter") {
-                if (data >= 0) {
-                    element.childNodes[i].innerHTML = data;
+        for (let i = 0; i < info.timers.length; i ++) {
+            if (info.timers[i]["name"] == 1){
+                runtimer = info.timers[i] // Only 1 timer currently pls.
+                if (runtimer.start_time != null) {
+                    timer_start = new Date(runtimer.start_time)
                 } else {
-                    element.childNodes[i].innerHTML = "";
+                    timer_start = null
                 }
-                break;
+                if (runtimer.end_time != null) {
+                    timer_end = new Date(runtimer.end_time);
+                } else {
+                    timer_end = null
+                }
             }
         }
-    }
-    return element;
-}
-function updateHR(player, data) {
-    if (data === undefined){
-        data = ""
 
     }
-    var element = document.getElementById(("hr" + player).toString());
-    if (element) {
-        for (var i = 0; i < element.childNodes.length; i++) {
-            if (element.childNodes[i].className == "counter") {
-                element.childNodes[i].innerHTML = data;
-                break;
+    if (!runtimer){
+        console.log("no timer found!")
+    }
+    updateCounters(info.counters)
+    updateHRs(info.heart_rates);
+}
+
+
+let counters = []
+function updateCounters(data) {
+    for (let i = 0; i < data.length; i ++){
+        if (counters.length < i+1){
+            counters.push({"value": 0})
+            let COUNTS = document.getElementById("COUNT");
+            COUNTS.innerHTML += "<div id='deathcounter"+i+"'></div>"
+        }
+        var element = document.getElementById(("deathcounter" + i).toString());
+        if (data[i] >= 0){
+            counters[i]["value"] = data[i]
+            element.style.display = "block"
+            element.innerHTML = "<div class='skull'>" + (i+1) + "💀</div><div class='counter'>" + counters[i]["value"] + "</div>"
+        } else {
+            element.style.display = "none";
+        }
+    }
+}
+
+
+
+let hrs = []
+function updateHRs(data) {
+    for (let i = 0; i < data.length; i ++){
+        if (hrs.length < i+1){
+            hrs.push({"value": 0, "novalue": 10, "highscore": 0})
+            let HRS = document.getElementById("HR");
+            HRS.innerHTML += "<div id='hr"+i+"'></div>"
+        }
+        var element = document.getElementById(("hr" + i).toString());
+        if (data[i] > 0){
+            hrs[i]["value"] = data[i]
+            if (hrs[i]["highscore"] < data[i]){
+                hrs[i]["highscore"] = data[i]
+            }
+            hrs[i]["novalue"] = 0
+            element.style.display = "block"
+            element.innerHTML = "<div class='heart'>" + (i+1) + "❤️</div><div class='counter' style='opacity: 1'>" + hrs[i]["value"] + "</div>"
+        } else {
+            hrs[i]["novalue"] += 1
+            element.innerHTML = "<div class='heart'>" + (i+1) + "❤️</div><div class='counter' style='opacity: "+ (((10-hrs[i]["novalue"])/20) + 0.5) + "'>" + hrs[i]["value"] + "</div>"
+            if (hrs[i]["novalue"] > 10){
+                element.style.display = "none";
             }
         }
     }
-    return element;
 }
 
 
 var donations_flag = {"message":"2022-04-30T08:37:45.788Z Lahjoituksia luettavana!"}
-const fade_minutes = 1.5
+const fade_minutes = 1.2
 function getDonationsFlag() {
     let xhr = new XMLHttpRequest();
     xhr.open("GET", "https://api.dev.vauhtijuoksu.fi/player-info");
