@@ -1,26 +1,47 @@
 
 let info_url = "https://api.dev.vauhtijuoksu.fi/stream-metadata";
+let local_info_url = "http://0.0.0.0:8081/status.json";
 
-function docReady(fn) {
-    // see if DOM is already available
-    if (document.readyState === "complete" || document.readyState === "interactive") {
-        // call on next available tick
-        setTimeout(fn, 1);
-    } else {
-        document.addEventListener("DOMContentLoaded", fn);
-    }
-}
-docReady(function() {
+function main() {
     make_timer()
     updateStatus()
+    updateLocalStatus()
     document.getElementById("time").onclick = toggle_time;
-    document.getElementById("selfcount").onclick = toggle_selfcount;
-    document.getElementById("COUNT").onclick = toggle_count;
-    document.getElementById("HR").onclick = toggle_hr;
+    document.getElementById("HRHOLD").onclick = toggle_hr;
+    //document.getElementById("addCounter").onclick = addCounter;
+    //document.getElementById("removeCounter").onclick = removeCounter;
     getDonationsFlag()
     setFade()
+}
+let active_counters = 0
+function addCounter(){
+    if (active_counters < 4){
+        console.log($('c'+active_counters.toString()))
+        $('#c'+active_counters.toString()).removeClass('notactive')
+        active_counters += 1
+        console.log(active_counters)
+        if (active_counters == 4){
+            $("#addCounter").addClass('notactive')
 
-});
+        }
+
+    }
+    $("#removeCounter").removeClass('notactive')
+}
+function removeCounter(){
+    if (active_counters > 0){
+        active_counters -= 1
+        console.log($('c'+active_counters.toString()))
+        $('#c'+active_counters.toString()).addClass('notactive')
+        console.log(active_counters)
+        if (active_counters == 0){
+            $("#removeCounter").addClass('notactive')
+
+        }
+
+    }
+    $("#addCounter").removeClass('notactive')
+}
 
 function toggle_time(){
     document.getElementById("time").classList.toggle("hidden")
@@ -32,17 +53,40 @@ function toggle_selfcount() {
     document.getElementById("selfcount").classList.toggle("hidden")
 }
 function toggle_hr(){
-    document.getElementById("HR").classList.toggle("hidden")
+    document.getElementById("HRHOLD").classList.toggle("hidden")
 }
 
+function updateLocalStatus() {
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", local_info_url);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+            if (xhr.responseText){
+                var info = JSON.parse(xhr.responseText);
+                updateLocalInfo(info[0]);
+                setTimeout(updateLocalStatus, 1000);
+
+            } else {
+            setTimeout(updateLocalStatus, 10000);
+            }
+        }
+    }
+    xhr.send();
+}
 function updateStatus() {
     let xhr = new XMLHttpRequest();
     xhr.open("GET", info_url);
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4) {
-            var info = JSON.parse(xhr.responseText);
-            updateInfo(info);
-            setTimeout(updateStatus, 1000);
+            if (xhr.responseText){
+                var info = JSON.parse(xhr.responseText);
+                updateInfo(info);
+                setTimeout(updateStatus, 1000);
+
+            } else {
+
+                setTimeout(updateStatus, 10000);
+            }
         }
     }
     xhr.send();
@@ -50,30 +94,54 @@ function updateStatus() {
 let selfcount = 0
 
 document.addEventListener("keyup", KeyCheck);  //or however you are calling your method
+
+let counterKeys = [
+    [81,65],
+    [69,68],
+    [84,71],
+    [85,74],
+    [79,76],
+    [221,222],
+]
 function KeyCheck(event) {
     var KeyID = event.keyCode;
-    switch (KeyID) {
-        case 32:
-            selfcount += 1
-            updateselfcount()
-            break;
-        case 8:
-            selfcount -= 1
-            updateselfcount()
-            break;
-        case 46:
-            selfcount = 0
-            updateselfcount()
-            break;
-        default:
-            break;
+    for (let i = 0; i < counterKeys.length; i++){
+        if (KeyID === counterKeys[i][0]){
+            changeCounter(i, 1)
+            return
+        }
+        if (KeyID === counterKeys[i][1]){
+            changeCounter(i, -1)
+            return
+        }
     }
 }
 
-function updateselfcount() {
-    var element = document.getElementById("selfcountvalue");
-    element.innerHTML = selfcount
+function changeCounter(c, d){
+    if (counters[c] >= 0){
+        let newvalue = counters[c] + d
+        if (newvalue >= 0){
+            sendNewCounterData()
+        }
+    }
 }
+function sendNewCounterData(){
+    let data = {counters: []}
+    for (let i = 0; i < counters.length; i++){
+        if (counters[i] >= -1){
+            data.counters.push(counters[i])
+        }
+    }
+    $.ajax({
+       type: 'PATCH',
+       url: info_url,
+       data: JSON.stringify(data),
+       contentType: 'application/json',
+
+   /* success and error handling omitted for brevity */
+});
+}
+
 
 let timer_start = null   // Date.now()
 let timer_end = null
@@ -88,7 +156,7 @@ function make_timer(){
     var element = document.getElementById("time");
     if (element !== null){
         element.innerHTML += timer;
-        setInterval(update_time, 10)
+        setTimeout(update_time, 10)
     }
 }
 
@@ -142,6 +210,38 @@ function update_time(){
     document.getElementById("t-s2").innerHTML = s2
     document.getElementById("t-ms1").innerHTML = ms1
     document.getElementById("t-ms2").innerHTML = ms2
+    setTimeout(update_time, 10)
+}
+let status = {
+    "INIT": "🤍",
+    "CONNECTING": "💙",
+    "CONNECTED": "💚",
+    "OK": "❤️",
+    "QUEUE": "💜",
+    "NOTFOUND": "🖤",
+    "ERROR": "🤎",
+}
+let lhrs = 0
+function updateLocalInfo(data) {
+    if (Object.keys(data).length > 0){
+        for (let i = 0; i < Object.keys(data).length; i ++){
+            if (lhrs < i+1){
+                lhrs += 1
+                let HRS = document.getElementById("LHR");
+                HRS.innerHTML += "<div id='lhr"+i+"' class='status'></div>"
+            }
+            var element = document.getElementById(("lhr" + i).toString());
+            var sid = (i+1).toString()
+            if (data[sid]){
+                var seconds = new Date() / 1000;
+                var since_update = 1 - Math.max(0, Math.min((seconds - parseInt(data[sid].time)-1)/10, 1))
+
+
+                element.style.display = "block"
+                element.innerHTML = "<div class='heart' style='opacity: " + (0.25 + since_update*0.25).toString() + "'>" + status[data[sid].status] +"</div><div class='counter'>" + data[sid].value.toString() + "</div>"
+            }
+        }
+    }
 }
 
 
@@ -175,21 +275,23 @@ function updateInfo(info) {
 }
 
 
-let counters = []
+let counters = [-2,-2,-2,-2,-2,-2]
 function updateCounters(data) {
+    return
     for (let i = 0; i < data.length; i ++){
-        if (counters.length < i+1){
-            counters.push({"value": 0})
-            let COUNTS = document.getElementById("COUNT");
-            COUNTS.innerHTML += "<div id='deathcounter"+i+"'></div>"
-        }
-        var element = document.getElementById(("deathcounter" + i).toString());
-        if (data[i] >= 0){
-            counters[i]["value"] = data[i]
-            element.style.display = "block"
-            element.innerHTML = "<div class='skull'>" + (i+1) + "💀</div><div class='counter'>" + counters[i]["value"] + "</div>"
+        if (i > 5) return
+        var element = document.getElementById(("counter" + i + 'number').toString());
+        if (!data[i]){
+            counters[i] = -1
         } else {
-            element.style.display = "none";
+            counters[i] = data[i]
+        }
+        element.innerHTML = counters[i]
+        if (counters[i] >= 0){
+            $('#c'+i).removeClass('notactive')
+        } else {
+            $('#c'+i).addClass('notactive')
+
         }
     }
 }
@@ -240,6 +342,7 @@ function getDonationsFlag() {
 function setFade() {
     var element = document.getElementById("playeralert");
     let msg = donations_flag.message
+    if (!msg) return
     let time = new Date(msg.split(" ")[0])
     var diff = (Date.now() - time)/1000
     if (diff < fade_minutes*60) {
@@ -251,3 +354,8 @@ function setFade() {
     }
     setTimeout(setFade, 100);
 }
+
+
+
+
+main()

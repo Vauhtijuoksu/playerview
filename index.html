@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <title>PLAYER VIEW</title>
     <link rel="stylesheet" href="style.css">
-
-    <script src="script.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <body>
 <div id="framewrapper">
@@ -15,25 +14,74 @@
 </iframe>
 </div>
 <div id="bottom">
+    <div class="row disabled">
+        <div id="clearSohva" class="button">
+            X
+        </div>
+        <textarea id="sohvapeople" rows="4" cols="20"></textarea>
+        <div id="updateSohva" class="button">
+            Päivitä<br>sohva
+        </div>
+    </div>
+    <div class="row  disabled">
+        <div id="counters">
+            <div id="c0" class="counter notactive">
+                <div id="counter0number">0</div>
+                <div class="counterbuttons">
+                    <div>Q</div>
+                    <div>A</div>
+                </div>
+            </div>
+            <div id="c1" class="counter notactive">
+                <div id="counter1number">0</div>
+                <div class="counterbuttons">
+                    <div>E</div>
+                    <div>D</div>
+                </div>
+            </div>
+            <div id="c2" class="counter notactive">
+                <div id="counter2number">0</div>
+                <div class="counterbuttons">
+                    <div>T</div>
+                    <div>G</div>
+                </div>
+            </div>
+            <div id="c3" class="counter notactive">
+                <div id="counter3number">0</div>
+                <div class="counterbuttons">
+                    <div>U</div>
+                    <div>J</div>
+                </div>
+            </div>
+            <div id="c4" class="counter notactive">
+                <div id="counter4number">0</div>
+                <div class="counterbuttons">
+                    <div>O</div>
+                    <div>L</div>
+                </div>
+            </div>
+            <div id="c5" class="counter notactive">
+                <div id="counter5number">0</div>
+                <div class="counterbuttons">
+                    <div>Å</div>
+                    <div>Ä</div>
+                </div>
+            </div>
+        </div>
+    </div>
         <div id="time">
 
         </div>
-    <div id="selfcount">
-        <div class="selfcountext">
-            Oma<br>
-            Laskuri
+    <div id="HRHOLD">
+        <div id="HR">
         </div>
-        <div id="selfcountvalue" class="counter">
-            0
+        <div id="LHR">
         </div>
-    </div>
-    <div id="COUNT">
-    </div>
-    <div id="HR">
     </div>
 
 
 </div>
 <div id="playeralert">Lahjoituksia luettavana, Ilmoita tuottajalle kun on hyvä hetki. Ei kiirettä!</div>
 </body>
+    <script src="script.js"></script>
 </html>
