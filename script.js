@@ -1,5 +1,5 @@
 
-let info_url = "https://api.dev.vauhtijuoksu.fi/stream-metadata";
+let info_url = "https://api.vauhtijuoksu.fi/stream-metadata";
 let local_info_url = "http://0.0.0.0:8081/status.json";
 
 function main() {
@@ -330,7 +330,7 @@ var donations_flag = {"message":"2022-04-30T08:37:45.788Z Lahjoituksia luettavan
 const fade_minutes = 1.2
 function getDonationsFlag() {
     let xhr = new XMLHttpRequest();
-    xhr.open("GET", "https://api.dev.vauhtijuoksu.fi/player-info");
+    xhr.open("GET", "https://api.vauhtijuoksu.fi/player-info");
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4) {
             donations_flag = JSON.parse(xhr.responseText);
